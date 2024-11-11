@@ -27,11 +27,11 @@ def process_product(row):
     name = row['Terméknév'].lower()
     
     # Extract color (simple word match)
-    colors = ['white', 'green', 'black', 'cream', 'rose', 'blue', 'gold', 'fehér', 'fekete', 'piros', 'ezüst']
+    colors = ['white', 'green', 'black', 'cream', 'rose', 'blue', 'gold', 'fehér', 'fekete', 'piros', 'ezüst', 'arany', 'bézs', 'kék', 'sárga', 'zöld', 'barna']
     color = next((c for c in colors if c in name), None)
     
     # Extract material
-    materials = ['papír', 'műanyag', 'pamut', 'porcelán', 'fém', 'öntöttvas', 'textil']
+    materials = ['papír', 'műanyag', 'pamut', 'porcelán', 'fém', 'öntöttvas', 'textil', 'kerámia', 'műbőr', 'polyester', 'üveg', 'vászon', 'alumínium']
     material = next((m for m in materials if m in name), None) 
     
     # Extract dimensions and volume
