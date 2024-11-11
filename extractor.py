@@ -14,9 +14,14 @@ def extract_dimensions(name):
     return None, None, None
 
 def extract_volume(name):
-    # Find patterns like "10db-os" or "20db-os"
-    match = re.search(r'(\d+)db-os', name)
-    return int(match.group(1)) if match else None
+    ml_match = re.search(r'(\d+)ml', name)
+    l_match = re.search(r'(\d+\,?\d*)l', name)
+    
+    if ml_match:
+        return f"{ml_match.group(1)}ml"
+    elif l_match:
+        return f"{l_match.group(1)}l"
+    return None
 
 def process_product(row):
     name = row['Terméknév'].lower()
