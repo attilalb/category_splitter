@@ -3,15 +3,31 @@ import pandas as pd
 import re
 
 def extract_dimensions(name):
-    # Find patterns like "22x9x23cm" or "33x33cm"
-    match = re.search(r'(\d+)x(\d+)(?:x(\d+))?(?:cm)?', name)
-    if match:
-        dims = match.groups()
-        if dims[2]:  # 3D dimensions (length x width x height)
-            return int(dims[0]), int(dims[1]), int(dims[2])
-        else:  # 2D dimensions (length x width)
-            return int(dims[0]), int(dims[1]), None
-    return None, None, None
+    # Replace comma with dot for decimal numbers
+    name = name.replace(',', '.')
+    
+    # Try to find 2D or 3D dimensions first (e.g., "22,5x9x23cm" or "33,5x33cm")
+    multi_dim = re.search(r'(\d+\.?\d*)x(\d+\.?\d*)(?:x(\d+\.?\d*))?(?:cm)?', name)
+    
+    # Try to find single dimension (e.g., "15cm", "11cm")
+    single_dim = re.search(r'(?<!\d)(\d+\.?\d*)(?:\s)?cm(?!\s*x)', name)
+    
+    def format_number(num_str):
+        if num_str:
+            num = float(num_str)
+            return f"{int(num) if num.is_integer() else num}cm"
+        return None
+    
+    if multi_dim:
+        dims = multi_dim.groups()
+        if dims[2]:  # 3D dimensions
+            return format_number(dims[0]), format_number(dims[1]), format_number(dims[2])
+        else:  # 2D dimensions
+            return format_number(dims[0]), format_number(dims[1]), None
+    elif single_dim:  # Single dimension
+        return None, None, None, format_number(single_dim.group(1))
+    
+    return None, None, None, None
 
 def extract_volume(name):
     ml_match = re.search(r'(\d+)ml', name)
@@ -35,14 +51,23 @@ def process_product(row):
     material = next((m for m in materials if m in name), None) 
     
     # Extract dimensions and volume
-    length, width, height = extract_dimensions(name)
+    dims = extract_dimensions(name)
+    if len(dims) == 4:  # Single dimension found
+        length, width, height, single_size = dims
+    else:  # Multi dimensions or no dimensions
+        length, width, height = dims
+        single_size = None
+        
     volume = extract_volume(name)
     
-    # Create size string if dimensions exist
+    # Create size string
     size = None
     if length and width:
-        size = f"{length}x{width}{'x'+str(height) if height else ''}cm"
+        size = f"{length.replace('cm', '')}x{width.replace('cm', '')}{'x'+height.replace('cm', '') if height else ''}cm"
+    elif single_size:
+        size = single_size
     
+
     return pd.Series({
         'Szín': color,
         'Anyag': material,
